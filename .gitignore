@@ -1,5 +1,6 @@
-datas_full.pkl
+datas_full_10k_1.pkl
 results
 __pycache__
 catboost_info
 2.ipynb
+Learning_to_Rank_From_Pairwise_Approach_to_Listwis.pdf
