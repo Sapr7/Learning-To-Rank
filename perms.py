@@ -1,10 +1,12 @@
+
+
 from itertools import combinations, permutations
 
 import numpy as np
 import torch
-
+import torch.nn as nn
 import math
-
+from torch.utils.data import Dataset, DataLoader
 class Permutation:
     
     def __len__(self):
@@ -26,10 +28,12 @@ class Permutation:
         
         phi_score = phi(all_scores).to(device)
         
-        for i in range(phi_score.shape[0]):
-                phi_score[i] /= torch.sum(phi_score[i:])
+        probas_list = []
         
-        return torch.prod(phi_score[:k])
+        for i in range(phi_score.shape[0]):
+                probas_list.append(phi_score[i] / torch.sum(phi_score[i:]))
+        probas = torch.stack(probas_list)
+        return torch.prod(probas[:k])
     
     @staticmethod
     def all_perms(idxs, as_list=True):
@@ -50,14 +54,14 @@ class Permutation:
         perms = self.all_perms(self.idxs, as_list=False)
         return torch.tensor([self.get_p_for_perm(perm, self.scores, self.phi) for perm in perms]).to(self.device)
     
-    def top_k_perms(self, fix_idxs=None, full=True):
-        if fix_idxs is None:
-            fix_idxs = []
+    # def top_k_perms(self, fix_idxs=None, full=True):
+    #     if fix_idxs is None:
+    #         fix_idxs = []
         
-        idxs = [i for i in self.idxs if i not in fix_idxs]
-        top_k_permutations = permutations(idxs) if not full else list(permutations(idxs))
+    #     idxs = [i for i in self.idxs if i not in fix_idxs]
+    #     top_k_permutations = permutations(idxs) if not full else list(permutations(idxs))
 
-        return [fix_idxs + list(perm) for perm in top_k_permutations]
+    #     return [fix_idxs + list(perm) for perm in top_k_permutations]
     
 class Gk(Permutation):
     
@@ -74,7 +78,7 @@ class Gk(Permutation):
         # if self.k == self.n:
         #     return super().__len__()
         
-        return self.number_of_perms 
+        return self.number_of_perms
 
     def __init__(self, k, n, scores, phi, device):
         super().__init__(n, scores, phi, device)
@@ -84,10 +88,10 @@ class Gk(Permutation):
         self.get_proba_for_topk_docs()
         
     def get_all_topk_perms(self):
-        self.number_of_perms = torch.prod(torch.tensor([self.n - i for i in range(self.k)])).to(self.device)
+        self.number_of_perms = (torch.prod(torch.tensor([self.n - i for i in range(self.k)])).to(self.device))
         
         all_first_docs = list(combinations(np.arange(self.n), self.k))
-        all_perms_of_first_docs = torch.tensor([list(permutations(list(_))) for _ in all_first_docs]).to(self.device).reshape([self.number_of_perms, self.k]) 
+        all_perms_of_first_docs = torch.tensor([list(permutations(list(_))) for _ in all_first_docs]).to(self.device).reshape([self.number_of_perms, self.k])
         
         return all_perms_of_first_docs
     
@@ -99,8 +103,8 @@ class Gk(Permutation):
         
         self.all_perms_of_first_docs = self.get_all_topk_perms()
         
-        self.top_k_probas = torch.zeros(self.number_of_perms).to(self.device)
-        self.perm_for_proba = torch.zeros([self.number_of_perms, self.k])
+        self.top_k_probas = torch.zeros(self.number_of_perms, requires_grad=True).to(self.device)
+        # self.perm_for_proba = torch.zeros([self.number_of_perms, self.k])
         
         for i, perm in enumerate(self.all_perms_of_first_docs):
             self.top_k_probas[i] = super().get_p_for_perm(perm, self.scores, self.phi)
