@@ -6,6 +6,10 @@ import pandas as pd
 
 from catboost import Pool
 
+import torch
+
+from torch.utils.data import Dataset, DataLoader
+
 class Data_From_File():
     
     @staticmethod
@@ -80,4 +84,77 @@ class Data_From_File():
         
         self.X_vali, self.y_vali, self.q_vali = self.get_data_from_pd(self.data_vali)
         return self.X_vali, self.y_vali, self.q_vali
+        
+        
+        
+class Data_for_torch_ListNet(Dataset, Data_From_File):
+    
+    def __init__(self, file, which = 0):
+        
+        self.data = pd.DataFrame(Data_From_File.open_file(file)[which]).drop('doc_id', axis = 1)
+        self.dict_data = self.data.set_index('query_id').T.to_dict('list')
+        self.keys = list(self.dict_data.keys())
+        
+    def __len__(self):
+        return len(self.dict_data)
+        
+    def __getitem__(self, idx):
+        key = self.keys[idx]
+        return self.dict_data[key]
+    
+    
+class Data_for_transformer_cnn(Dataset, Data_From_File ):
+    
+    def __init__(self, file, num_docs = 256,  which = 0, is_preprocess = True, is_shuffle = True):
+        
+        self.size = num_docs 
+        self.is_shuffle = is_shuffle
+        
+        self.data = pd.DataFrame(Data_From_File.open_file(file)[which]).drop('doc_id', axis = 1)
+        self.dict_data = self.data.set_index('query_id').T.to_dict('list')
+        self.keys = list(self.dict_data.keys())
+        
+        if is_preprocess:
+            self.preprocess()
+        
+    def __len__(self):
+        return len(self.dict_data)
+        
+    def __getitem__(self, idx):
+        key = self.keys[idx]
+        return self.dict_data[key]
+    
+    def preprocess(self):
+        # print(len(self.dict_data))
+        
+        for key in self.keys:
+            
+            data, labels = self.dict_data[key] 
+            num_docs, feats = data.shape
+            # perm = torch.randperm(torch.arange(data_shape))
+            if self.is_shuffle:
+                perm = torch.randperm(num_docs)
+                data = data[perm]
+                labels = labels[perm]
+            
+            new_data = torch.zeros([self.size, feats], dtype = float)
+            new_labels = torch.zeros([self.size], dtype=int)
+            
+            if num_docs <= self.size:
+                new_data[:num_docs] = torch.tensor(data)
+                new_labels[:num_docs] = torch.tensor(labels)
+                
+            else:
+                new_data = torch.tensor(data)[:self.size]
+                new_labels = torch.tensor(labels)[:self.size]
+                
+            self.dict_data[key] = [new_data, new_labels]
+                
+            
+            
+            
+            
+            
+        
+        
         
