@@ -105,8 +105,9 @@ class Data_for_torch_ListNet(Dataset, Data_From_File):
     
 class Data_for_transformer_cnn(Dataset, Data_From_File ):
     
-    def __init__(self, file, num_docs = 256,  which = 0, is_preprocess = True, is_shuffle = True):
+    def __init__(self, file, num_docs = 256,  which = 0, is_preprocess = True, is_shuffle = True, for_cnn = False):
         
+        self.for_cnn = for_cnn
         self.size = num_docs 
         self.is_shuffle = is_shuffle
         
@@ -147,6 +148,12 @@ class Data_for_transformer_cnn(Dataset, Data_From_File ):
             else:
                 new_data = torch.tensor(data)[:self.size]
                 new_labels = torch.tensor(labels)[:self.size]
+                
+            if self.for_cnn:
+                new_data.unsqueeze(1)
+                new_labels.unsqueeze(1)
+                
+                
                 
             self.dict_data[key] = [new_data, new_labels]
                 
