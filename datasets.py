@@ -105,8 +105,9 @@ class Data_for_torch_ListNet(Dataset, Data_From_File):
     
 class Data_for_transformer_cnn(Dataset, Data_From_File ):
     
-    def __init__(self, file, num_docs = 256,  which = 0, is_preprocess = True, is_shuffle = True, for_cnn = False):
+    def __init__(self, file, num_docs = 256,  which = 0, is_preprocess = True, is_shuffle = True, for_cnn = False, device = 'cuda'):
         
+        self.device = device
         self.for_cnn = for_cnn
         self.size = num_docs 
         self.is_shuffle = is_shuffle
