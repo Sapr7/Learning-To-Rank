@@ -8,9 +8,16 @@ from typing import Callable, Tuple, Any
 import torch
 from torch.utils.data import DataLoader
 from torch.optim import Optimizer
-from torch.optim.lr_scheduler import _LRScheduler
+from torch.optim.lr_scheduler import LRScheduler
 
 from utils.loss_mask_utils import create_mask, Cross_Entropy_point
+import time
+
+try:
+    from thop import profile, clever_format
+    _THOP_AVAILABLE = True
+except Exception:
+    _THOP_AVAILABLE = False
 
 cross_entropy = Cross_Entropy_point()
 
@@ -34,6 +41,8 @@ def train_eval(train_loader:DataLoader, model, optimizer:Optimizer, loss_fn:Call
     
     ndcg_5, ndcg_10, ndcg_all = [], [], []
     losses = []
+    train_times_s, val_times_s = [], []
+    flops_info = None
     
     for epoch in range(num_epochs):
         
@@ -41,6 +50,7 @@ def train_eval(train_loader:DataLoader, model, optimizer:Optimizer, loss_fn:Call
         total_loss_epoch = 0
         
         #train model
+        start_train = time.perf_counter()
         for batch in train_loader:
             inputs, targets = batch 
 
@@ -59,6 +69,22 @@ def train_eval(train_loader:DataLoader, model, optimizer:Optimizer, loss_fn:Call
             optimizer.step()      
             
             total_loss_epoch += loss.item()
+            # Measure FLOPs once on first batch of first epoch if available
+            if (flops_info is None) and _THOP_AVAILABLE:
+                try:
+                    with torch.no_grad():
+                        macs, params = profile(model, inputs=(inputs,), verbose=False)
+                    flops_readable, params_readable = clever_format([2 * macs, params], '%.3f')
+                    flops_info = {
+                        'flops_per_forward': 2 * macs,
+                        'params': params,
+                        'flops_readable': flops_readable,
+                        'params_readable': params_readable
+                    }
+                except Exception:
+                    flops_info = {'flops_per_forward': None, 'params': None, 'flops_readable': None, 'params_readable': None}
+        end_train = time.perf_counter()
+        train_times_s.append(end_train - start_train)
         
         avg_loss_epoch = total_loss_epoch / len(train_loader)
         
@@ -71,7 +97,10 @@ def train_eval(train_loader:DataLoader, model, optimizer:Optimizer, loss_fn:Call
             if score_fn is not ndcg_score:
                 raise NotImplemented
             
+            start_val = time.perf_counter()
             avg_ndcg5_epoch, avg_ndcg10_epoch, avg_ndcg_epoch = evaluate(val_loader, model, ndcg_score, create_mask)
+            end_val = time.perf_counter()
+            val_times_s.append(end_val - start_val)
             
             ndcg_5.append(avg_ndcg5_epoch)
             ndcg_10.append(avg_ndcg10_epoch)
@@ -80,7 +109,7 @@ def train_eval(train_loader:DataLoader, model, optimizer:Optimizer, loss_fn:Call
         losses.append(avg_loss_epoch)
             
         if scheduler:
-            if not isinstance(scheduler, _LRScheduler):
+            if not isinstance(scheduler, LRScheduler):
                 raise TypeError('scheduler must be scheduler')
             scheduler.step()
         
@@ -93,6 +122,7 @@ def train_eval(train_loader:DataLoader, model, optimizer:Optimizer, loss_fn:Call
                         
             print(f'Epoch [{epoch + 1}/{num_epochs}], Loss: {avg_loss_epoch:.4f}')
             print(f'NDCG@5 {avg_ndcg5_epoch:.4f} || NDCG@10 {avg_ndcg10_epoch:.4f} || Avg NDCG: {avg_ndcg_epoch:.4f} ')
+            print(f'Train time: {train_times_s[-1]:.3f}s' + (f" | Val time: {val_times_s[-1]:.3f}s" if need_eval else ''))
         
         if save:
             # need save info about model
@@ -111,9 +141,15 @@ def train_eval(train_loader:DataLoader, model, optimizer:Optimizer, loss_fn:Call
                     torch.save(model.state_dict(), name)
                     print(f'model saved on {epoch+1} epoch with best {criterion} = {max_score:.4f} ')
             
-    return losses, {'ndcg@5' : ndcg_5,
-                    'ndcg@10' : ndcg_10, 
-                    'ndcg full' : ndcg_all}
+    metrics = {'ndcg@5' : ndcg_5,
+               'ndcg@10' : ndcg_10, 
+               'ndcg full' : ndcg_all,
+               'train_time_s' : train_times_s}
+    if need_eval:
+        metrics['val_time_s'] = val_times_s
+    if flops_info is not None:
+        metrics['flops_info'] = flops_info
+    return losses, metrics
 
 def evaluate(val_loader:DataLoader, model, score_fn:Callable=ndcg_score, create_mask:Callable[..., torch.Tensor]=create_mask, **kwargs) -> list[list[Any]]:
     model.eval()
