@@ -27,6 +27,66 @@ def expectation_for_eval(output:torch.Tensor) -> torch.Tensor:
     
     return torch.sum(output * torch.arange(num_of_rates, device = output.device), dim = -1).unsqueeze(-1)
 
+def compute_recall_at_k(y_true: np.ndarray, y_pred: np.ndarray, k: int, relevance_threshold: float = 0.0) -> float:
+    """
+    Compute Recall@k for a single query.
+    
+    Args:
+        y_true: Ground truth relevance scores (shape: [num_docs])
+        y_pred: Predicted scores (shape: [num_docs])
+        k: Number of top documents to consider
+        relevance_threshold: Minimum relevance score to be considered relevant (default: 0.0)
+    
+    Returns:
+        Recall@k value (float between 0 and 1)
+    """
+    if len(y_true) == 0 or len(y_pred) == 0:
+        return 0.0
+    
+    # Count total relevant documents
+    relevant_docs = np.sum(y_true > relevance_threshold)
+    if relevant_docs == 0:
+        return 1.0  # If no relevant docs, recall is perfect (or could be 0, but 1 is more common)
+    
+    # Get top k predicted documents
+    top_k_indices = np.argsort(y_pred)[::-1][:k]
+    
+    # Count relevant documents in top k
+    relevant_in_top_k = np.sum(y_true[top_k_indices] > relevance_threshold)
+    
+    return relevant_in_top_k / relevant_docs
+
+def compute_mrr(y_true: np.ndarray, y_pred: np.ndarray, relevance_threshold: float = 0.0) -> float:
+    """
+    Compute Mean Reciprocal Rank (MRR) for a single query.
+    MRR = 1 / rank of first relevant document
+    
+    Args:
+        y_true: Ground truth relevance scores (shape: [num_docs])
+        y_pred: Predicted scores (shape: [num_docs])
+        relevance_threshold: Minimum relevance score to be considered relevant (default: 0.0)
+    
+    Returns:
+        Reciprocal rank value (float, 0 if no relevant documents found)
+    """
+    if len(y_true) == 0 or len(y_pred) == 0:
+        return 0.0
+    
+    # Find relevant documents
+    relevant_mask = y_true > relevance_threshold
+    if not np.any(relevant_mask):
+        return 0.0  # No relevant documents
+    
+    # Get ranking by predicted scores (descending order)
+    sorted_indices = np.argsort(y_pred)[::-1]
+    
+    # Find the rank of the first relevant document (1-indexed)
+    for rank, idx in enumerate(sorted_indices, start=1):
+        if relevant_mask[idx]:
+            return 1.0 / rank
+    
+    return 0.0
+
 def train_eval(train_loader:DataLoader, model, optimizer:Optimizer, loss_fn:Callable[...,torch.Tensor] = cross_entropy, num_epochs:int = 100, create_mask:Callable[..., torch.Tensor]=create_mask, need_eval=True, **kwargs) -> Tuple[list[Any], dict[str, list[Any]]]:
     
     plot = kwargs.get('plot', True)
@@ -40,6 +100,8 @@ def train_eval(train_loader:DataLoader, model, optimizer:Optimizer, loss_fn:Call
     min_loss = 1e300
     
     ndcg_5, ndcg_10, ndcg_all = [], [], []
+    recall_5, recall_10, recall_all = [], [], []
+    mrr_scores = []
     losses = []
     train_times_s, val_times_s = [], []
     flops_info = None
@@ -98,13 +160,17 @@ def train_eval(train_loader:DataLoader, model, optimizer:Optimizer, loss_fn:Call
                 raise NotImplemented
             
             start_val = time.perf_counter()
-            avg_ndcg5_epoch, avg_ndcg10_epoch, avg_ndcg_epoch = evaluate(val_loader, model, ndcg_score, create_mask)
+            avg_ndcg5_epoch, avg_ndcg10_epoch, avg_ndcg_epoch, avg_recall5_epoch, avg_recall10_epoch, avg_recall_epoch, avg_mrr_epoch = evaluate(val_loader, model, ndcg_score, create_mask)
             end_val = time.perf_counter()
             val_times_s.append(end_val - start_val)
             
             ndcg_5.append(avg_ndcg5_epoch)
             ndcg_10.append(avg_ndcg10_epoch)
             ndcg_all.append(avg_ndcg_epoch)
+            recall_5.append(avg_recall5_epoch)
+            recall_10.append(avg_recall10_epoch)
+            recall_all.append(avg_recall_epoch)
+            mrr_scores.append(avg_mrr_epoch)
             
         losses.append(avg_loss_epoch)
             
@@ -118,10 +184,16 @@ def train_eval(train_loader:DataLoader, model, optimizer:Optimizer, loss_fn:Call
                 if need_eval:
                     plot_results(loss = losses, metrics = {'ndcg@5' : ndcg_5,
                                                             'ndcg@10' : ndcg_10, 
-                                                            'ndcg full' : ndcg_all})
+                                                            'ndcg full' : ndcg_all,
+                                                            'recall@5' : recall_5,
+                                                            'recall@10' : recall_10,
+                                                            'recall full' : recall_all,
+                                                            'mrr' : mrr_scores})
                         
             print(f'Epoch [{epoch + 1}/{num_epochs}], Loss: {avg_loss_epoch:.4f}')
-            print(f'NDCG@5 {avg_ndcg5_epoch:.4f} || NDCG@10 {avg_ndcg10_epoch:.4f} || Avg NDCG: {avg_ndcg_epoch:.4f} ')
+            if need_eval:
+                print(f'NDCG@5: {avg_ndcg5_epoch:.4f} | NDCG@10: {avg_ndcg10_epoch:.4f} | NDCG: {avg_ndcg_epoch:.4f}')
+                print(f'Recall@5: {avg_recall5_epoch:.4f} | Recall@10: {avg_recall10_epoch:.4f} | Recall: {avg_recall_epoch:.4f} | MRR: {avg_mrr_epoch:.4f}')
             print(f'Train time: {train_times_s[-1]:.3f}s' + (f" | Val time: {val_times_s[-1]:.3f}s" if need_eval else ''))
         
         if save:
@@ -146,16 +218,24 @@ def train_eval(train_loader:DataLoader, model, optimizer:Optimizer, loss_fn:Call
                'ndcg full' : ndcg_all,
                'train_time_s' : train_times_s}
     if need_eval:
+        metrics['recall@5'] = recall_5
+        metrics['recall@10'] = recall_10
+        metrics['recall full'] = recall_all
+        metrics['mrr'] = mrr_scores
         metrics['val_time_s'] = val_times_s
     if flops_info is not None:
         metrics['flops_info'] = flops_info
     return losses, metrics
 
-def evaluate(val_loader:DataLoader, model, score_fn:Callable=ndcg_score, create_mask:Callable[..., torch.Tensor]=create_mask, **kwargs) -> list[list[Any]]:
+def evaluate(val_loader:DataLoader, model, score_fn:Callable=ndcg_score, create_mask:Callable[..., torch.Tensor]=create_mask, **kwargs) -> Tuple[float, float, float, float, float, float, float]:
     model.eval()
     
     k = kwargs.get('k', [5, 10, 'full'])
+    relevance_threshold = kwargs.get('relevance_threshold', 0.0)
+    
     ndcg_scores = {key : [] for key in k }
+    recall_scores = {key : [] for key in k }
+    mrr_scores = []
     
     with torch.no_grad():
         for batch in val_loader:
@@ -178,23 +258,55 @@ def evaluate(val_loader:DataLoader, model, score_fn:Callable=ndcg_score, create_
                 query_targets = targets[i][query_mask]
                 if query_targets.numel() > 1:
                     
-                    for i,k in enumerate(ndcg_scores.keys()):
-                        c = None if k == 'full' else k
+                    query_outputs_np = query_outputs.cpu().numpy()
+                    query_targets_np = query_targets.cpu().numpy()
+                    
+                    # Compute NDCG
+                    for k_val in ndcg_scores.keys():
+                        c = None if k_val == 'full' else k_val
                         if query_targets.sum() != 0:
                             ndcg = score_fn(
-                                [query_targets.cpu().numpy()],
-                                [query_outputs.cpu().numpy()],
+                                [query_targets_np],
+                                [query_outputs_np],
                             k = c)
                         else :
                             ndcg = 1
-                        ndcg_scores[k].append(ndcg)
+                        ndcg_scores[k_val].append(ndcg)
+                    
+                    # Compute Recall@k
+                    for k_val in recall_scores.keys():
+                        if k_val == 'full':
+                            k_for_recall = len(query_targets_np)
+                        else:
+                            k_for_recall = k_val
+                        
+                        recall = compute_recall_at_k(
+                            query_targets_np, 
+                            query_outputs_np, 
+                            k=k_for_recall,
+                            relevance_threshold=relevance_threshold
+                        )
+                        recall_scores[k_val].append(recall)
+                    
+                    # Compute MRR
+                    mrr = compute_mrr(
+                        query_targets_np,
+                        query_outputs_np,
+                        relevance_threshold=relevance_threshold
+                    )
+                    mrr_scores.append(mrr)
                         
         avg_ndcg5_epoch = sum(ndcg_scores[5]) / len(ndcg_scores[5]) if ndcg_scores[5] else 0.0
         avg_ndcg10_epoch = sum(ndcg_scores[10]) / len(ndcg_scores[10]) if ndcg_scores[10] else 0.0
         avg_ndcg_epoch = sum(ndcg_scores['full']) / len(ndcg_scores['full']) if ndcg_scores['full'] else 0.0
         
+        avg_recall5_epoch = sum(recall_scores[5]) / len(recall_scores[5]) if recall_scores[5] else 0.0
+        avg_recall10_epoch = sum(recall_scores[10]) / len(recall_scores[10]) if recall_scores[10] else 0.0
+        avg_recall_epoch = sum(recall_scores['full']) / len(recall_scores['full']) if recall_scores['full'] else 0.0
+        
+        avg_mrr_epoch = sum(mrr_scores) / len(mrr_scores) if mrr_scores else 0.0
             
-    return [avg_ndcg5_epoch, avg_ndcg10_epoch, avg_ndcg_epoch]
+    return avg_ndcg5_epoch, avg_ndcg10_epoch, avg_ndcg_epoch, avg_recall5_epoch, avg_recall10_epoch, avg_recall_epoch, avg_mrr_epoch
 
 def plot_results(loss:list[Any], metrics:dict[Any,Any],is_metric=True, clear=True) -> None:
     
