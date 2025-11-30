@@ -8,12 +8,15 @@
 | MLP       | 54.12      | 36.84 | 75.28      | 43.15 | 70.81       | 37.12 |
 | **TransPointRank** | **58.38** | **37.51** | **77.85** | **43.40** | **74.46** | **38.10** |
 
-## Evaluation of the impact of different dropout rates on the best-performing architecture using the metric $NDCG@5$ 
+## Evaluation of the impact of different dropout rates on the best-performing architecture using the metric $NDCG@5$ (Web30k dataset) 
 
-<img src="Transformer/done_pictures/dropouts_ndcg5.jpg" width="400">
+<img src="Transformer/done_pictures/dropouts_ndcg5.jpg" width="300">
+<img src="Transformer/done_pictures/NDCG10_comp_dropouts.jpg" width="300">
+<img src="Transformer/done_pictures/NDCG_comp_dropouts.jpg" width="316">
 
 ## Comparison of time inference for TransPointRank(GPU/CPU), LightGBM ranker(CPU) and Catboost ranker(CPU)  
 <img src="Transformer/done_pictures/inference_gpu_vs_cpu_comparison.jpg" width="400">
+<img src="Transformer/done_pictures/inference_cpu_vs_lightgbm.jpg">
 
 
 # Learning-To-Rank with Transformer Models
