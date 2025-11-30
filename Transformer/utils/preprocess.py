@@ -108,53 +108,6 @@ def preprocess_data(file:str, num_docs:int=256, which:int=None, is_shuffle:bool=
     print('preprocess is done')
     return processed_data
 
-def preprocess_data_4_TN(file:str, num_docs:int=256, which:int=None, is_shuffle:bool=True, device:str='cuda') -> dict:
-    """
-    Preprocess data for a transformer or CNN model.
-
-    Args:
-        file (str): Path to the data file.
-        num_docs (int): Number of documents to pad/truncate to per query.
-        is_shuffle (bool): Whether to shuffle the documents within each query.
-        for_cnn (bool): Whether to preprocess data specifically for CNN input.
-
-    Returns:
-        dict: Preprocessed data with query_id as keys and (data, labels) as values.
-    """
-    if which != None:
-        raw_data = pd.DataFrame(Data_From_File.open_file(file)[which]).drop('doc_id', axis=1)
-    else:
-        raw_data = pd.DataFrame(Data_From_File.open_file(file)).drop('doc_id', axis=1)
-
-    processed_data = {}
-        
-    for query_id, group in raw_data.groupby('query_id'):
-        data = np.clip(np.vstack(group['fl_features'].to_numpy()).astype(np.float64), -1e15,1e100)
-        labels = np.array(group['labels'].tolist())[0]
-        
-        mean_data, std_data = np.clip(np.mean(data, axis = 0).astype(np.float64), -1e15, 1e100), np.clip(np.std(data, axis = 0).astype(np.float64), 0.0, 1e100)    
-        data = (data.astype(np.float64) - mean_data)/(std_data + 1e-6) 
-        
-        if data.ndim != 2:
-            raise ValueError(f"Inconsistent shape for query_id {query_id}: {data.shape}")
-
-        num_documents, features = data.shape
-
-        if is_shuffle:
-            perm = np.random.permutation(len(labels))
-            data, labels = data[perm], labels[perm]
-
-        # padded_data = np.zeros((num_docs, features), dtype=np.float32)
-        # padded_labels = np.zeros((num_docs,), dtype=np.int64)
-
-        # padded_data[:min(num_documents, num_docs)] = data[:num_docs]
-        # padded_labels[:min(num_documents, num_docs)] = labels[:num_docs]
-        
-        processed_data[query_id] = (torch.tensor(data), torch.tensor(labels))
-    
-    print('preprocess is done')
-    return processed_data
-
 def preprocess_for_finetune(train_loader:DataLoader, model, p:float=0.7) -> list:
     model.eval()
     q = 1-p

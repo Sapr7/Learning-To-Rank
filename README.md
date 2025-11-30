@@ -8,15 +8,15 @@
 | MLP       | 54.12      | 36.84 | 75.28      | 43.15 | 70.81       | 37.12 |
 | **TransPointRank** | **58.38** | **37.51** | **77.85** | **43.40** | **74.46** | **38.10** |
 
-## Evaluation of the impact of different dropout rates on the best-performing architecture using the metric $NDCG@5$ (Web30k dataset) 
+## Evaluation of the impact of different dropout rates on the best-performing architecture using the metric $NDCG@k$ (Web30k dataset) 
 
  | <img src="Transformer/done_pictures/dropouts_ndcg5.jpg" width="250"> |
 <img src="Transformer/done_pictures/NDCG10_comp_dropouts.jpg" width="250"> |
 <img src="Transformer/done_pictures/NDCG_comp_dropouts.jpg" width="263"> |
 
-## Comparison of time inference for TransPointRank(GPU/CPU), LightGBM ranker(CPU) and Catboost ranker(CPU)  
+## Comparison of time inference for TransPointRank(GPU/CPU), LightGBM ranker(CPU) and CatBoost ranker(CPU)  
 <img src="Transformer/done_pictures/inference_gpu_vs_cpu_comparison.jpg" width="400">
-<img src="Transformer/done_pictures/inference_cpu_vs_lightgbm.jpg">
+<img src="Transformer/done_pictures/inference_cpu_vs_lightgbm.jpg" width="600">
 
 
 # Learning-To-Rank with Transformer Models
@@ -31,7 +31,7 @@ The project implements approaches to the ranking task (Learning-to-Rank) using t
 
 - **Transformer Encoder model** for document ranking
 - **Multiple loss functions**: Pointwise (Cross-Entropy), Listwise (ListNet), Combined Loss
-- **Comprehensive metric evaluation**: NDCG@5, NDCG@10, NDCG (full), Recall@5, Recall@10, Recall (full), MRR
+- **Comprehensive metric evaluation**: NDCG@5, NDCG@10, NDCG (full), ERR@k
 - **Analysis utilities**: inference time measurement, memory usage estimation
 - **Fine-tuning support** for models
 - **Visualization** of training results and comparison of different architectures
@@ -78,6 +78,10 @@ pip install thop  # For FLOPs counting (optional)
 ## Usage
 
 ### 1. Data Preprocessing
+Any of the provided datasets can be downloaded from the internet in .txt format. To convert them to **.pkl** format, use 
+```bash
+python Transformers/utils/txt_to_pkl.py --txt_path PATH --pkl_path PATH_TO_SAVE 
+```
 
 Data should be in pickle file format with the following structure:
 - `fl_features`: document features
@@ -92,7 +96,6 @@ from utils.preprocess import preprocess_data
 train_data = preprocess_data(
     file_path='path/to/train.pkl',
     num_docs=140,        # Maximum number of documents per query
-    which=0,             # Dataset index (0 for train, -1 for test)
     is_shuffle=True,     # Whether to shuffle documents
     device='cuda'
 )
@@ -151,15 +154,8 @@ The `train_eval` function automatically computes multiple ranking metrics:
 - **NDCG@10**: NDCG on top-10 documents
 - **NDCG (full)**: NDCG on all documents in the ranking
 
-#### Recall Metrics
-
-- **Recall@5**: Proportion of relevant documents found in top-5 results
-- **Recall@10**: Proportion of relevant documents found in top-10 results
-- **Recall (full)**: Proportion of relevant documents found in the entire ranking
-
 #### Rank-based Metrics
-
-- **MRR (Mean Reciprocal Rank)**: Average of the reciprocal ranks of the first relevant document for each query
+- **ERR (Expected Reciprocal Rank)**: Measures the expected position at which a user becomes satisfied with the ranking
 
 All metrics are computed during validation and displayed in the console output. The metrics dictionary returned by `train_eval` contains lists of all metric values for each epoch, enabling detailed analysis of model performance over time.
 

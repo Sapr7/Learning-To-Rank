@@ -2,9 +2,9 @@ import numpy as np
 import pandas as pd
 import pickle
 from collections import defaultdict
+import fire
 
 def txt_to_pkl(txt_path, pkl_path, n_features=None):
-    # сначала определяем число признаков
     if n_features is None:
         max_feat = 0
         with open(txt_path, "r") as f:
@@ -16,7 +16,6 @@ def txt_to_pkl(txt_path, pkl_path, n_features=None):
         n_features = max_feat
         print("Detected features:", n_features)
 
-    # группируем документы по query
     data = defaultdict(list)
 
     with open(txt_path, "r") as f:
@@ -35,17 +34,16 @@ def txt_to_pkl(txt_path, pkl_path, n_features=None):
 
             data[qid].append((x, label))
 
-    # формируем итоговый список записей
     rows = []
     for qid, docs in data.items():
-        docs = sorted(docs, key=lambda x: -x[1])  # можно убрать сортировку
+        docs = sorted(docs, key=lambda x: -x[1])
         X = np.vstack([d[0] for d in docs])
         y = np.array([d[1] for d in docs])
         rows.append({
             "query_id": qid,
             "fl_features": X,
             "labels": y,
-            "doc_id": list(range(len(docs)))  # фиктивный id
+            "doc_id": list(range(len(docs)))
         })
 
     df = pd.DataFrame(rows)
@@ -55,9 +53,5 @@ def txt_to_pkl(txt_path, pkl_path, n_features=None):
 
     print("Saved:", pkl_path)
 
-
-
-# пример вызова
-# txt_to_pkl("ltrc_yahoo.txt", "ltrc_yahoo.pkl")
 if __name__ == "__main__":
-    txt_to_pkl('/home/aletovv/data/Fold1/test.txt', '/home/aletovv/data/test_split_web30.pkl')
+    fire.Fire(txt_to_pkl)

@@ -27,7 +27,6 @@ def expectation_for_eval(output:torch.Tensor) -> torch.Tensor:
     
     return torch.sum(output * torch.arange(num_of_rates, device = output.device), dim = -1).unsqueeze(-1)
 
-import numpy as np
 
 def err_at_k(r, k=None):
     n = len(r)
@@ -50,12 +49,9 @@ def compute_err(y_true, y_pred, k=None):
     y_true = np.asarray(y_true)
     y_pred = np.asarray(y_pred)
 
-    # сортируем по предсказаниям
     order = np.argsort(y_pred)[::-1]
     y_true_sorted = y_true[order] / 4
 
-    # переводим истинные метки в "вероятности удовлетворённости"
-    # классическая формула: (2^rel - 1) / 2^rel_max
     rel_max = y_true_sorted.max() if len(y_true_sorted) > 0 else 0
     if rel_max > 0:
         r = (2 ** y_true_sorted - 1) / (2 ** rel_max)
