@@ -1,24 +1,19 @@
 # Results for a rebuttal
-## Extension of Table 1 with Yahoo! and Istella datasets for NDCG@5
-**Table: Performance of different architectures on Web10K, Web30K, Yahoo and Istella datasets (NDCG@5), pointwise approach.**
+## Extension of Table 1 with additional datasets and ERR metric
 
-| Model                         | Web30K | Yahoo | Istella |
-|-------------------------------|-----------|-------|---------|
-| TabNet                          | 40.32  | 66.95 | 64.34   |
-| MLP                             | 54.12  | 75.28 | 70.81   |
-| **Transformer (TransPointRank)**  | **58.38** | **77.85** | **74.46** |
+|           | **Web30K** |       | **Yahoo!** |       | **Istella** |       |
+|-----------|------------|-------|------------|-------|-------------|-------|
+|           | *NDCG@5*   | *ERR* | *NDCG@5*   | *ERR* | *NDCG@5*    | *ERR* |
+| TabNet    | 40.32      | 30.74 | 66.95      | 38.01 | 64.34       | 33.11 |
+| MLP       | 54.12      | 36.84 | 75.28      | 43.15 | 70.81       | 37.12 |
+| **TransPointRank** | **58.38** | **37.51** | **77.85** | **43.40** | **74.46** | **38.10** |
 
-## Additional Comparison of models on Web30k, Yahoo! and Istella datasets based on **ERR** metric
+## Evaluation of the impact of different dropout rates on the best-performing architecture using the metric $NDCG@5$ 
 
+<img src="Transformer/done_pictures/dropouts_ndcg5.jpg" width="400">
 
-| Model                         | Web30K | Yahoo | Istella |
-|-------------------------------|-----------|-------|---------|
-| TabNet                          | 30.74 | 38.01 | 33.11   |
-| MLP                             | 36.84  | 43.15 | 37.12   |
-| **Transformer (TransPointRank)**  | **37.51** | **43.40** | **38.10** |
-
-[Открыть PDF](Transformer/done pictures/NDCG@5 p+l;l;p comparison.pdf)
-
+## Comparison of time inference for TransPointRank(GPU/CPU), LightGBM ranker(CPU) and Catboost ranker(CPU)  
+<img src="Transformer/done_pictures/inference_gpu_vs_cpu_comparison.jpg" width="400">
 
 
 # Learning-To-Rank with Transformer Models
@@ -184,7 +179,7 @@ loss_fn = cross_entropy_for_finetune
 # ... further configuration
 ```
 
-## 📊 Loss Functions
+## Loss Functions
 
 The project supports several loss functions:
 
@@ -222,7 +217,7 @@ loss_fn = Combined_Loss(
 )
 ```
 
-## 📊 Evaluation Metrics
+## Evaluation Metrics
 
 The framework provides comprehensive evaluation metrics for ranking tasks:
 
@@ -232,32 +227,12 @@ The framework provides comprehensive evaluation metrics for ranking tasks:
    - Measures ranking quality considering position and relevance
    - Computed at different cutoffs: @5, @10, and full ranking
 
-2. **Recall@k**
-   - Measures the proportion of relevant documents retrieved in top-k results
-   - Useful for understanding coverage of relevant items
-   - Configurable relevance threshold (default: > 0.0)
-
-3. **MRR (Mean Reciprocal Rank)**
-   - Measures the average reciprocal rank of the first relevant document
-   - Particularly useful when the position of the first relevant result matters
-   - Returns 0 if no relevant documents are found
-
-### Customizing Metrics
-
-You can customize the relevance threshold for Recall and MRR:
-
-```python
-from utils.train_eval_utils import evaluate
-
-# Evaluate with custom relevance threshold
-avg_ndcg5, avg_ndcg10, avg_ndcg, avg_recall5, avg_recall10, avg_recall, avg_mrr = evaluate(
-    val_loader, 
-    model, 
-    ndcg_score, 
-    create_mask,
-    relevance_threshold=0.5  # Documents with score > 0.5 are considered relevant
-)
-```
+2. **ERR (Expected Reciprocal Rank)**
+    - Measures the expected position at which a user becomes satisfied with the ranking
+    - Uses a probabilistic satisfaction model: each document has a probability of satisfying the user
+    - Earlier relevant documents contribute more, but diminishing returns are modeled via a product of "not satisfied yet" probabilities
+    - Sensitive to both rank position and graded relevance levels (via transformation of relevance to satisfaction probability)
+    - Returns 0 if all relevance values are zero or no relevant documents are found
 
 ## Performance Analysis
 
@@ -290,36 +265,6 @@ The `done pictures/` folder contains results from experiments with various:
 - Loss functions (pointwise, listwise, combined)
 - Hyperparameters (dropout, polynomial degree)
 - Datasets (Web10k, Istella)
-
-##  Utilities
-
-### Creating Padding Mask
-
-```python
-from utils.loss_mask_utils import create_mask
-
-mask = create_mask(input_tensor)  # Boolean mask for documents
-```
-
-### Computing Metrics Manually
-
-You can compute metrics individually using utility functions:
-
-```python
-from utils.train_eval_utils import compute_recall_at_k, compute_mrr
-import numpy as np
-
-# Example: Compute Recall@10
-y_true = np.array([0.0, 1.0, 0.0, 1.0, 0.5, 0.0])  # Ground truth relevance
-y_pred = np.array([0.1, 0.9, 0.2, 0.8, 0.7, 0.3])  # Predicted scores
-
-recall_10 = compute_recall_at_k(y_true, y_pred, k=10, relevance_threshold=0.0)
-print(f"Recall@10: {recall_10:.4f}")
-
-# Example: Compute MRR
-mrr = compute_mrr(y_true, y_pred, relevance_threshold=0.0)
-print(f"MRR: {mrr:.4f}")
-```
 
 ### Data Preprocessing
 
