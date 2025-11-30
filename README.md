@@ -1,8 +1,31 @@
+# Results for a rebuttal
+## Extension of Table 1 with Yahoo! and Istella datasets for NDCG@5
+**Table: Performance of different architectures on Web10K, Web30K, Yahoo and Istella datasets (NDCG@5), pointwise approach.**
+
+| Model                         | Web30K | Yahoo | Istella |
+|-------------------------------|-----------|-------|---------|
+| TabNet                          | 40.32  | 66.95 | 64.34   |
+| MLP                             | 54.12  | 75.28 | 70.81   |
+| **Transformer (TransPointRank)**  | **58.38** | **77.85** | **74.46** |
+
+## Additional Comparison of models on Web30k, Yahoo! and Istella datasets based on **ERR** metric
+
+
+| Model                         | Web30K | Yahoo | Istella |
+|-------------------------------|-----------|-------|---------|
+| TabNet                          | 30.74 | 38.01 | 33.11   |
+| MLP                             | 36.84  | 43.15 | 37.12   |
+| **Transformer (TransPointRank)**  | **37.51** | **43.40** | **38.10** |
+
+[Открыть PDF](Transformer/done pictures/NDCG@5 p+l;l;p comparison.pdf)
+
+
+
 # Learning-To-Rank with Transformer Models
 
 This repository contains an implementation of Learning-to-Rank methods based on the Transformer Encoder architecture. The project is designed for ranking documents by relevance to queries using deep neural networks.
 
-## 📋 Project Description
+## Project Description
 
 The project implements approaches to the ranking task (Learning-to-Rank) using transformer architectures. The model is based on the Encoder architecture and supports various loss functions (pointwise, listwise, combined), enabling efficient training of models for document ranking.
 
@@ -15,7 +38,8 @@ The project implements approaches to the ranking task (Learning-to-Rank) using t
 - **Fine-tuning support** for models
 - **Visualization** of training results and comparison of different architectures
 
-## 🏗️ Model Architecture
+
+## Model Architecture
 
 The model is a Transformer-based Encoder:
 
