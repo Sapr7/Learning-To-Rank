@@ -10,9 +10,9 @@
 
 ## Evaluation of the impact of different dropout rates on the best-performing architecture using the metric $NDCG@5$ (Web30k dataset) 
 
-<img src="Transformer/done_pictures/dropouts_ndcg5.jpg" width="300">
-<img src="Transformer/done_pictures/NDCG10_comp_dropouts.jpg" width="300">
-<img src="Transformer/done_pictures/NDCG_comp_dropouts.jpg" width="316">
+ | <img src="Transformer/done_pictures/dropouts_ndcg5.jpg" width="300"> |
+<img src="Transformer/done_pictures/NDCG10_comp_dropouts.jpg" width="300"> |
+<img src="Transformer/done_pictures/NDCG_comp_dropouts.jpg" width="316"> |
 
 ## Comparison of time inference for TransPointRank(GPU/CPU), LightGBM ranker(CPU) and Catboost ranker(CPU)  
 <img src="Transformer/done_pictures/inference_gpu_vs_cpu_comparison.jpg" width="400">
