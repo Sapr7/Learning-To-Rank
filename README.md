@@ -1,18 +1,17 @@
 # Results for a rebuttal
 ## Extension of Table 1 with additional datasets and ERR metric
 
-|           | **Web30K** |       | **Yahoo!** |       | **Istella** |       |
-|-----------|------------|-------|------------|-------|-------------|-------|
-|           | *NDCG@5*   | *ERR* | *NDCG@5*   | *ERR* | *NDCG@5*    | *ERR* |
-| TabNet    | 40.32      | 30.74 | 66.95      | 38.01 | 64.34       | 33.11 |
-| MLP       | 54.12      | 36.84 | 75.28      | 43.15 | 70.81       | 37.12 |
-| **TransPointRank** | **58.38** | **37.51** | **77.85** | **43.40** | **74.46** | **38.10** |
+|           |**Web10K**|        | **Web30K** |       | **Yahoo!** |       | **Istella** |       |
+|-----------|-------- |--------------|------------|-------|------------|-------|-------------|-------|
+|           |*NDCG@5*   | *ERR*| *NDCG@5*   | *ERR* | *NDCG@5*   | *ERR* | *NDCG@5*    | *ERR* |
+| TabNet    |39.51|30.15| 40.32      | 30.74 | 66.95      | 38.01 | 64.34       | 33.11 |
+| MLP       |52.81|35.23| 54.12      | 36.84 | 75.28      | 43.15 | 70.81       | 37.12 |
+| **TransPointRank** |**56.30**|**36.42**| **58.38** | **37.51** | **77.85** | **43.40** | **74.46** | **38.10** |
 
 ## Evaluation of the impact of different dropout rates on the best-performing architecture using the metric $NDCG@k$ (Web30k dataset) 
 
- | <img src="Transformer/done_pictures/dropouts_ndcg5.jpg" width="250"> |
-<img src="Transformer/done_pictures/NDCG10_comp_dropouts.jpg" width="250"> |
-<img src="Transformer/done_pictures/NDCG_comp_dropouts.jpg" width="263"> |
+ | <img src="Transformer/done_pictures/dropouts_ndcg5.jpg" width="350"> |
+<img src="Transformer/done_pictures/NDCG10_comp_dropouts.jpg" width="350"> 
 
 ## Comparison of time inference for TransPointRank(GPU/CPU), LightGBM ranker(CPU) and CatBoost ranker(CPU)  
 <img src="Transformer/done_pictures/inference_gpu_vs_cpu_comparison.jpg" width="400">
