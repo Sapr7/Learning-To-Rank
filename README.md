@@ -1,3 +1,10 @@
+# Learning-To-Rank with Transformer Models
+
+This repository contains an implementation of Learning-to-Rank methods based on the Transformer Encoder architecture. The project is designed for ranking documents by relevance to queries using deep neural networks.
+
+## Project Description
+
+The project implements approaches to the ranking task (Learning-to-Rank) using transformer architectures. The model is based on the Encoder architecture and supports various loss functions (pointwise, listwise, combined), enabling efficient training of models for document ranking.
 # Results for a rebuttal
 ## Extension of Table 1 with additional datasets and ERR metric
 
@@ -18,13 +25,6 @@
 <img src="Transformer/done_pictures/inference_cpu_vs_lightgbm.jpg" width="600">
 
 
-# Learning-To-Rank with Transformer Models
-
-This repository contains an implementation of Learning-to-Rank methods based on the Transformer Encoder architecture. The project is designed for ranking documents by relevance to queries using deep neural networks.
-
-## Project Description
-
-The project implements approaches to the ranking task (Learning-to-Rank) using transformer architectures. The model is based on the Encoder architecture and supports various loss functions (pointwise, listwise, combined), enabling efficient training of models for document ranking.
 
 ### Key Features
 
