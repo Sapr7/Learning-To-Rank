@@ -6,23 +6,46 @@ This repository contains an implementation of Learning-to-Rank methods based on 
 
 The project implements approaches to the ranking task (Learning-to-Rank) using transformer architectures. The model is based on the Encoder architecture and supports various loss functions (pointwise, listwise, combined), enabling efficient training of models for document ranking.
 # Results for a rebuttal
-## Extension of Table 1 with additional datasets and ERR metric
+<!-- ## Extension of Table 1 with additional datasets and ERR metric
 
 |           |**Web10K**|        | **Web30K** |       | **Yahoo!** |       | **Istella** |       |
 |-----------|-------- |--------------|------------|-------|------------|-------|-------------|-------|
 |           |*NDCG@5*   | *ERR*| *NDCG@5*   | *ERR* | *NDCG@5*   | *ERR* | *NDCG@5*    | *ERR* |
 | TabNet    |39.51|30.15| 40.32      | 30.74 | 66.95      | 38.01 | 64.34       | 33.11 |
 | MLP       |52.81|35.23| 54.12      | 36.84 | 75.28      | 43.15 | 70.81       | 37.12 |
-| **TransPointRank** |**56.30**|**36.42**| **58.38** | **37.51** | **77.85** | **43.40** | **74.46** | **38.10** |
+| **TransPointRank** |**56.30**|**36.42**| **58.38** | **37.51** | **77.85** | **43.40** | **74.46** | **38.10** | -->
 
-## Evaluation of the impact of different dropout rates on the best-performing architecture using the metric $NDCG@k$ (Web30k dataset) 
+## Comparison of Transformer trained with three different losses: 
+$\mathcal{L}_{CE}$, $\mathcal{L}_{LN}$, and $\mathcal{L}_{CE} + 0.01\,\mathcal{L}_{LN}$
+
+<!-- NDCG@5 -->
+<div style="display:flex; flex-wrap:wrap; gap:20px; justify-content:center;">
+  <img src="Transformer/done_pictures/NDCG@5 p+l;l;p comparison.pdf" width="400">
+  <img src="Transformer/done_pictures/NDCG@5 comp p+l;l;p istella.pdf" width="600">
+  <img src="Transformer/done_pictures/yahoo ndcg@5.pdf" width="400">
+</div>
+
+<!-- NDCG@10 -->
+<div style="display:flex; flex-wrap:wrap; gap:20px; justify-content:center; margin-top:20px;">
+  <img src="Transformer/done_pictures/NDCG@10 p+l;l;p comparison.pdf" width="600">
+  <img src="Transformer/done_pictures/NDCG@10 comp p+l;l;p istella.pdf" width="600">
+  <img src="Transformer/done_pictures/yahoo ndcg@10.pdf" width="400">
+</div>
+
+
+
+<!-- ## Evaluation of the impact of different dropout rates on the best-performing architecture using the metric $NDCG@k$ (Web30k dataset) 
 
  | <img src="Transformer/done_pictures/dropouts_ndcg5.jpg" width="350"> |
-<img src="Transformer/done_pictures/NDCG10_comp_dropouts.jpg" width="350"> 
-
+<img src="Transformer/done_pictures/NDCG10_comp_dropouts.jpg" width="350">  -->
+<!-- 
 ## Comparison of time inference for TransPointRank(GPU/CPU), LightGBM ranker(CPU) and CatBoost ranker(CPU)  
 <img src="Transformer/done_pictures/inference_gpu_vs_cpu_comparison.jpg" width="400">
 <img src="Transformer/done_pictures/inference_cpu_vs_lightgbm.jpg" width="600">
+
+## Comparison of time inference for TransPointRank(GPU/CPU), LightGBM ranker(CPU) and CatBoost ranker(CPU)  
+<img src="Transformer/done_pictures/inference_gpu_vs_cpu_comparison.jpg" width="400">
+<img src="Transformer/done_pictures/inference_cpu_vs_lightgbm.jpg" width="600"> -->
 
 
 
