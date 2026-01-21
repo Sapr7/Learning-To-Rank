@@ -21,14 +21,14 @@ $\mathcal{L}_{CE}$, $\mathcal{L}_{LN}$, and $\mathcal{L}_{CE} + 0.01\,\mathcal{L
 <!-- NDCG@5 -->
 <div style="display:flex; flex-wrap:wrap; gap:20px; justify-content:center;">
   <img src="Transformer/done_pictures/NDCG@5 p+l;l;p comparison.pdf" width="400">
-  <img src="Transformer/done_pictures/NDCG@5 comp p+l;l;p istella.pdf" width="600">
+  <img src="Transformer/done_pictures/NDCG@5 comp p+l;l;p istella.pdf" width="400">
   <img src="Transformer/done_pictures/yahoo ndcg@5.pdf" width="400">
 </div>
 
 <!-- NDCG@10 -->
 <div style="display:flex; flex-wrap:wrap; gap:20px; justify-content:center; margin-top:20px;">
-  <img src="Transformer/done_pictures/NDCG@10 p+l;l;p comparison.pdf" width="600">
-  <img src="Transformer/done_pictures/NDCG@10 comp p+l;l;p istella.pdf" width="600">
+  <img src="Transformer/done_pictures/NDCG@10 p+l;l;p comparison.pdf" width="400">
+  <img src="Transformer/done_pictures/NDCG@10 comp p+l;l;p istella.pdf" width="400">
   <img src="Transformer/done_pictures/yahoo ndcg@10.pdf" width="400">
 </div>
 
