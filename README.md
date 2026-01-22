@@ -5,7 +5,7 @@ This repository contains an implementation of Learning-to-Rank methods based on 
 ## Project Description
 
 The project implements approaches to the ranking task (Learning-to-Rank) using transformer architectures. The model is based on the Encoder architecture and supports various loss functions (pointwise, listwise, combined), enabling efficient training of models for document ranking.
-# Results for a rebuttal
+# Additional experiments
 <!-- ## Extension of Table 1 with additional datasets and ERR metric
 
 |           |**Web10K**|        | **Web30K** |       | **Yahoo!** |       | **Istella** |       |
@@ -15,7 +15,7 @@ The project implements approaches to the ranking task (Learning-to-Rank) using t
 | MLP       |52.81|35.23| 54.12      | 36.84 | 75.28      | 43.15 | 70.81       | 37.12 |
 | **TransPointRank** |**56.30**|**36.42**| **58.38** | **37.51** | **77.85** | **43.40** | **74.46** | **38.10** | -->
 
-## Comparison of model performance for different values of the parameter $\alpha$, evaluated on $$$$\textbf{Web30k}$$ dataset using the $NDCG@k$ metric for $k = 5, 10, n_q$.
+## Comparison of model performance for different values of the parameter $\alpha$, evaluated on $$\textbf{Web30k}$$ dataset using the $NDCG@k$ metric for $k = 5, 10, n_q$.
 The first row report results for $\alpha = 1, 2, 3$, while the second row corresponds to $\alpha = 2, 4, 5$.
 
 <div style="display:flex; flex-wrap:wrap; gap:20px; justify-content:center;">
