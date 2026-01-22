@@ -31,8 +31,8 @@ The first row report results for $\alpha = 1, 2, 3$, while the second row corres
   <img src="Transformer/done_pictures/NDCG deg 2;4;5-1.png" width="200">
 </div>
 
-## Performance Comparison of Transformer trained with three different losses: 
-$$\mathcal{L}_{CE}$$, $$\mathcal{L}_{LN}$$, and $$\mathcal{L}_{CE} + 0.01\,\mathcal{L}_{LN}$$
+## Performance Comparison of Transformer trained with three different losses evaluated on Web30k, Istella and Yahoo! datasets: 
+
 
 <!-- NDCG@5 -->
 <div style="display:flex; flex-wrap:wrap; gap:20px; justify-content:center;">
